@@ -1,6 +1,6 @@
 {
     "name": "dep-sizes",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "A simple script to check the sizes of dependencies in a package-lock.json file",
     "scripts": {
         "start": "tsx ./lib/main.ts",
