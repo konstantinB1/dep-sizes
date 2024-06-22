@@ -1,0 +1,16 @@
+{
+    "include": ["lib/**/*.ts", "test/**/*.ts"],
+    "compilerOptions": {
+        "allowImportingTsExtensions": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "lib": ["ESNext", "DOM", "WebWorker"],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": false
+    }
+}
