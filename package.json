@@ -1,11 +1,16 @@
 {
     "name": "dep-sizes",
-    "version": "1.0.0",
-    "description": "",
+    "version": "0.1.0",
+    "description": "A simple script to check the sizes of dependencies in a package-lock.json file",
     "scripts": {
-        "start": "tsx ./lib/main.ts"
+        "start": "tsx ./lib/main.ts",
+        "build": "tsc -p tsconfig.build.json && cp package.json dist/package.json && cp README.md dist/README.md"
     },
-    "author": "",
+    "author": "Konstantin Bulatovic",
+    "bin": "./dist/lib/main.js",
+    "files": [
+        "dist"
+    ],
     "license": "ISC",
     "devDependencies": {
         "@eslint/js": "^9.5.0",

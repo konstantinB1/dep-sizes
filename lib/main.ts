@@ -1,7 +1,7 @@
+#!/usr/bin/env node
+
 import packageLock from '../package-lock.json';
 import { exec } from 'child_process';
-import fs from 'fs/promises';
-import cluster from 'cluster';
 import startPool from './parallel';
 
 const toKb = (bytes: number) => bytes / 1024;

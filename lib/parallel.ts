@@ -1,6 +1,6 @@
 import cluster, { type Worker } from 'node:cluster';
 import { availableParallelism } from 'node:os';
-import { writeFile } from 'node:fs/promises';
+import { writeFileSync } from 'node:fs';
 import { Entries } from './main';
 
 type WorkPool = {
@@ -47,7 +47,7 @@ export default function startPool(entries: Entries, args: string[]) {
                 process.stdout.write('\x1B[0G');
 
                 process.stdout.write(
-                    `Processing: ${processed}/${entries.length}:  `
+                    `Processing: ${processed}/${entries.length}: ${payload.name} - ${payload.formated} `
                 );
 
                 // Delete the second line
@@ -62,25 +62,29 @@ export default function startPool(entries: Entries, args: string[]) {
                         w.kill();
                     }
 
-                    done.sort((a, b) => a.rawSize - b.rawSize);
+                    if (args.includes('--sort')) {
+                        const sort = args[args.indexOf('--sort') + 1];
+
+                        if (sort === 'desc') {
+                            done.sort((a, b) => b.rawSize - a.rawSize);
+                        } else {
+                            done.sort((a, b) => a.rawSize - b.rawSize);
+                        }
+                    }
 
                     for (const { name, formated } of done) {
                         process.stdout.write(`${name} - ${formated}\n`);
                     }
 
+                    // Show cursor
+                    process.stdout.write('\x1B[?25h');
+
                     if (args.includes('--output')) {
                         const output = args[args.indexOf('--output') + 1];
-                        writeFile(output, JSON.stringify(done, null, 2))
-                            .then(() => {
-                                process.stdout.write(
-                                    `Output written to ${output}\n`
-                                );
-                            })
-                            .catch((err) => {
-                                process.stderr.write(
-                                    `Error writing output: ${err.message}\n`
-                                );
-                            });
+                        writeFileSync(output, JSON.stringify(done, null, 2), {
+                            flag: 'w',
+                            flush: true,
+                        });
                     }
 
                     process.exit(0);
