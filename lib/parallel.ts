@@ -1,5 +1,6 @@
 import cluster, { type Worker } from 'node:cluster';
 import { availableParallelism } from 'node:os';
+import { writeFile } from 'node:fs/promises';
 import { Entries } from './main';
 
 type WorkPool = {
@@ -22,36 +23,71 @@ export type WorkerPayload<T> = {
     type: WorkPool['status'];
 };
 
-export default function startPool(entries: Entries) {
+export default function startPool(entries: Entries, args: string[]) {
     const available = availableParallelism();
     const slices = Math.ceil(entries.length / available);
     let processed = 0;
+    const done: ProcessedPackage[] = [];
+    const workers: Worker[] = [];
 
     if (cluster.isPrimary) {
         for (let i = 0; i < available; i++) {
             const worker = cluster.fork();
 
-            process.stdout.write('\x1Bc');
-            process.stdout.write('Fetching packages...\n');
+            // Hide cursor
+            process.stdout.write('\x1B[?25l');
 
             worker.on('message', (payload: ProcessedPackage) => {
                 processed++;
 
-                // Move cursor to first line
-                process.stdout.write('\x1B[1A');
-                // Move cursor to left
-                process.stdout.write('\n\x1B[0G\n');
+                // Clear screen
+                process.stdout.write('\x1B[0K');
+
+                // GO to the start of the line on first line
+                process.stdout.write('\x1B[0G');
+
                 process.stdout.write(
-                    `Processed: ${processed}/${entries.length}:  `
+                    `Processing: ${processed}/${entries.length}:  `
                 );
+
+                // Delete the second line
+
+                done.push(payload);
 
                 if (processed === entries.length) {
                     process.stdout.write('\n');
                     process.stdout.write('Done fetching packages\n');
-                    worker.kill();
-                    process.exit();
+
+                    for (const w of workers) {
+                        w.kill();
+                    }
+
+                    done.sort((a, b) => a.rawSize - b.rawSize);
+
+                    for (const { name, formated } of done) {
+                        process.stdout.write(`${name} - ${formated}\n`);
+                    }
+
+                    if (args.includes('--output')) {
+                        const output = args[args.indexOf('--output') + 1];
+                        writeFile(output, JSON.stringify(done, null, 2))
+                            .then(() => {
+                                process.stdout.write(
+                                    `Output written to ${output}\n`
+                                );
+                            })
+                            .catch((err) => {
+                                process.stderr.write(
+                                    `Error writing output: ${err.message}\n`
+                                );
+                            });
+                    }
+
+                    process.exit(0);
                 }
             });
+
+            workers.push(worker);
 
             setTimeout(() => {
                 worker.send({

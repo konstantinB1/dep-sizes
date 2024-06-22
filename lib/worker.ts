@@ -9,11 +9,23 @@ export default async function worker() {
             case 'working':
                 for (const [name, { resolved: url }] of message.data!) {
                     const compressed = await getPackage(url);
+                    const pretty = showMbOrKb(compressed);
+
+                    process.stdout.write('\x1B[0K');
 
                     // Write package name and size
-                    process.stdout.write(`${name} - ${showMbOrKb(compressed)}`);
+                    // Clear from the start of the cursor to the end
+                    process.stdout.write('\x1B[0K');
+                    process.stdout.write(`${name} - ${pretty}`);
 
-                    process.send!(compressed);
+                    // Delete the second line
+                    process.stdout.write('\x1B[1A');
+
+                    process.send!({
+                        name,
+                        rawSize: compressed,
+                        formated: pretty,
+                    });
                 }
                 break;
         }

@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "",
     "scripts": {
-        "start": "node --loader ts-node/esm ./lib/parallel.ts"
+        "start": "tsx ./lib/main.ts"
     },
     "author": "",
     "license": "ISC",
